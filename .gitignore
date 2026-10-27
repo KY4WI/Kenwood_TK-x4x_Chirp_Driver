@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+
+# Personal radio images and firmware: only the synthetic test images belong here
+*.img
+!test-images/**/*.img
+*.bin
+*.hex

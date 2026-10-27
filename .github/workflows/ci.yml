@@ -1,0 +1,71 @@
+name: Driver syntax, fixture and CHIRP driver tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  python:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.10', '3.12']
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Validate driver syntax
+        run: python -m py_compile tk840.py
+      - name: Run driver regression tests
+        run: python -m unittest discover -s tests -v
+
+  chirp:
+    # CHIRP's own driver test suite, run the way an upstream submission is
+    # tested: the driver in chirp/drivers/, an image per model in
+    # tests/images/. All three image sets are run, against two CHIRP trees:
+    #  - pinned: a known-good kk7ds/chirp commit. This is the check that
+    #    must pass; a failure here means the driver or its images changed.
+    #  - master: CHIRP's current code, the tree a submission is tested
+    #    against. A failure here is reported but does not fail the run, so
+    #    an unrelated change in CHIRP shows up without turning CI red.
+    #    When master passes, move the pinned commit forward.
+    name: chirp (${{ matrix.chirp }}, ${{ matrix.image-set }})
+    runs-on: ubuntu-24.04
+    continue-on-error: ${{ matrix.chirp == 'master' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        image-set: [feature, dense, upstream]
+        chirp: [pinned, master]
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          path: driver
+      - uses: actions/checkout@v5
+        with:
+          repository: kk7ds/chirp
+          # Known good: CHIRP's driver tests passed with this commit on
+          # 2026-10-17.
+          ref: ${{ matrix.chirp == 'pinned' && '832d349e050fbdcde50185f77cdb34fbe5bab57a' || 'master' }}
+          path: chirp
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Install CHIRP test dependencies
+        run: pip install "pytest>=8,<9" pyyaml ddt pyserial requests
+      - name: Install the driver and its test images
+        run: |
+          cp driver/tk840.py chirp/chirp/drivers/tk840.py
+          suffix=""
+          if [ "${{ matrix.image-set }}" = dense ]; then suffix=_dense; fi
+          for m in 840 940 941; do
+            cp "driver/test-images/${{ matrix.image-set }}/Kenwood_TK-$m$suffix.img" \
+               "chirp/tests/images/Kenwood_TK-$m.img"
+          done
+      - name: Run CHIRP driver tests
+        working-directory: chirp
+        run: >
+          python -m pytest tests/test_drivers.py -q -p no:cacheprovider
+          -k "TK-840 or TK-940 or TK-941"
