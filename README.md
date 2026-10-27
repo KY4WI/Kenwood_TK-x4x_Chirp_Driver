@@ -121,6 +121,12 @@ and from the Enhanced TX Patch's transmit-frequency handling.
 an arbitrary marker there. Unpatched TK-940/TK-941 conventional channels
 retain their stock transmit-frequency behavior.
 
+**TA is preserved during upload**, even when **Settings -> Driver Options ->
+Disable commercial channel features** is enabled (the default). That option
+still disables the other commercial channel flags. New channels default to
+TA off. To edit TA, enable **Show commercial channel options** under Driver
+Options and show CHIRP's Extra fields.
+
 ### Data option
 
 The per-channel **Data** option enables or disables data transmission for

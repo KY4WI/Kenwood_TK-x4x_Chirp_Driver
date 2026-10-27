@@ -188,10 +188,13 @@ FLAGA_UNUSED = 0xC0          # bits 6..7
 FLAGB_DATA = 0x01
 FLAGB_UNUSED = 0xFE          # bits 1..7
 
-FLAGA_COMMERCIAL = (FLAGA_OPTIONAL_SIGNALING | FLAGA_TALK_AROUND |
-                    FLAGA_CALL | FLAGA_BUSY_LOCKOUT | FLAGA_HORN)
+# Talk Around is operationally significant, so automatic commercial-feature
+# cleanup must never clear it. Keep it independently editable.
+FLAGA_COMMERCIAL = (FLAGA_OPTIONAL_SIGNALING | FLAGA_CALL |
+                    FLAGA_BUSY_LOCKOUT | FLAGA_HORN)
 FLAGB_COMMERCIAL = FLAGB_DATA
-FLAGA_EDITABLE = FLAGA_TX_INHIBIT | FLAGA_COMMERCIAL | FLAGA_UNUSED
+FLAGA_EDITABLE = (FLAGA_TALK_AROUND | FLAGA_TX_INHIBIT |
+                  FLAGA_COMMERCIAL | FLAGA_UNUSED)
 FLAGB_EDITABLE = FLAGB_COMMERCIAL | FLAGB_UNUSED
 
 # KPG-25D global-options word at image offset 0x006A.  Its three consecutive
@@ -2506,7 +2509,7 @@ class TK840Radio(chirp_common.CloneModeRadio):
         }
 
     def _apply_commercial_policy(self):
-        """Disable legacy/commercial bits without changing TX Inhibit."""
+        """Disable other commercial bits, preserving TA and TX Inhibit."""
         image = bytearray(self._mmap.get_packed())
         channels, _systems = _parse_conventional_channels(image)
         for channel in channels:
@@ -3161,8 +3164,9 @@ class TK840Radio(chirp_common.CloneModeRadio):
         driver.append(_with_doc(RadioSetting(
             "tk840_disable_commercial", "Disable commercial channel features",
             RadioSettingValueBoolean(self._disable_commercial_features)),
-            "Disables legacy commercial channel features that are normally "
-            "not needed for amateur use. TX Inhibit is not affected."))
+            "Disables other legacy commercial channel features that are "
+            "normally not needed for amateur use. Talk Around and "
+            "TX Inhibit are preserved."))
         driver.append(_with_doc(RadioSetting(
             "tk840_show_commercial", "Show commercial channel options",
             RadioSettingValueBoolean(self._show_commercial_options)),
@@ -3575,7 +3579,8 @@ class TK840Radio(chirp_common.CloneModeRadio):
                 "the TA display icon. On TK-940/TK-941 conventional "
                 "channels with Enhanced TX, it does not select TX frequency "
                 "but still adds TX key-up delay, so it may be used as a "
-                "visual marker or for additional VCO settling time."))
+                "visual marker or for additional VCO settling time. "
+                "Automatic commercial-feature cleanup preserves this flag."))
             extra.append(_with_doc(RadioSetting(
                 "tk840_data", "Commercial: Data",
                 RadioSettingValueBoolean(
@@ -3805,7 +3810,8 @@ class TK840Radio(chirp_common.CloneModeRadio):
             # A genuinely new blank channel defaults to all optional/commercial
             # functions disabled and unused bits high.
             template[CH_FLAGS_A] |= (
-                FLAGA_COMMERCIAL | FLAGA_TX_INHIBIT | FLAGA_UNUSED)
+                FLAGA_COMMERCIAL | FLAGA_TALK_AROUND |
+                FLAGA_TX_INHIBIT | FLAGA_UNUSED)
             template[CH_FLAGS_B] |= (FLAGB_DATA | FLAGB_UNUSED)
 
         raw_freqs = str(self._extra_value(memory, "tk840_freq_words", ""))
