@@ -118,11 +118,11 @@ class TestTalkAroundPolicy(unittest.TestCase):
         size = ns["CONV_RECORD_SIZE"]
         template = bytearray(b"\xFF" * size)
         template[ns["CH_FLAGS_A"]] &= ~ns["FLAGA_TALK_AROUND"]
-        ns["_extra_value"] = lambda _mem, _key, default: default
         radio = SimpleNamespace(
             _channels=[{"offset": 0}],
             _mmap=FakeMap(template),
             _frequency_unused_mask=0x8000,
+            _extra_value=lambda _mem, _key, default: default,
         )
         memory = SimpleNamespace(number=2)
         record = ns["_record_for_new_memory"](radio, memory)
@@ -135,14 +135,13 @@ class TestTalkAroundPolicy(unittest.TestCase):
         ns = self.ns
         size = ns["CONV_RECORD_SIZE"]
         template = bytearray(b"\xFF" * size)
-        ns["_extra_value"] = (
-            lambda _mem, key, default: {
-                "tk840_flags": "FD/FF",
-            }.get(key, default))
         radio = SimpleNamespace(
             _channels=[],
             _mmap=FakeMap(template),
             _frequency_unused_mask=0x8000,
+            _extra_value=lambda _mem, key, default: {
+                "tk840_flags": "FD/FF",
+            }.get(key, default),
         )
         record = ns["_record_for_new_memory"](
             radio, SimpleNamespace(number=1))
