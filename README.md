@@ -247,3 +247,11 @@ The upload path is intentionally conservative:
 This driver is licensed under **GPL-3.0-or-later**. It is based in part on CHIRP's Kenwood TK-760 driver and related CHIRP Kenwood driver code. Original copyright and GPL terms are retained in the source.
 
 See `LICENSE` for the GNU General Public License version 3.
+
+## AI Assistance
+
+AI tools were used to assist with the development of this project, including code, research, and documentation. However, that should not be mistaken for AI doing all the work. I established the goals, directed the development, made the design decisions, and spent considerable time reviewing, testing, correcting, and refining the results.
+
+AI can be an incredibly useful tool, but getting good results requires technical knowledge, persistence, and a great deal of hands-on work. Sometimes working with AI feels like typing with boxing gloves on.
+
+This is very much my work, developed with the assistance of AI, not a project independently created by it.
