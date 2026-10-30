@@ -20,7 +20,7 @@ The set intended for CHIRP's `tests/images/` when the driver is submitted, under
 
 Within each set the TK-940 and TK-941 codeplugs are intentionally byte-identical; the files differ only in the model tag.
 
-TK-940/941 fixtures use the **stock 851 MHz base** and 12.5 kHz channel raster (only the lower 15 bits carry frequency). Earlier synthetic 800–851 MHz samples were moved up 100 MHz to keep them in the firmware's usable conventional-channel range without duplicate frequencies. Receive-only 94x records also enable the active-low TX Inhibit flag because stock firmware does not obey an empty stored TX word.
+TK-940/941 fixtures use the **stock 851 MHz base** and 12.5 kHz channel raster (only the lower 15 bits carry frequency). Receive-only 94x records also enable the active-low TX Inhibit flag because stock firmware does not obey an empty stored TX word.
 
 CI runs CHIRP's own driver test suite against all three sets (`.github/workflows/ci.yml`).
 
